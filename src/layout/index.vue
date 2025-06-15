@@ -14,6 +14,10 @@
           <el-icon><User /></el-icon>
           <span>用户管理</span>
         </el-menu-item>
+        <el-menu-item index="/chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>AI 助手</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -29,7 +33,7 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router'
-import { Monitor, User } from '@element-plus/icons-vue'
+import { Monitor, User, ChatDotRound } from '@element-plus/icons-vue'
 
 const route = useRoute()
 </script>
