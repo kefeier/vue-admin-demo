@@ -1,11 +1,25 @@
 <template>
   <div class="chat-container">
+    <div class="chat-header">
+      <el-switch
+        v-model="useTypewriter"
+        active-text="打字机效果"
+        inactive-text="直接显示"
+      />
+    </div>
     <div class="chat-messages" ref="messagesRef">
       <div v-for="(message, index) in messages" :key="index" 
            :class="['message', message.role === 'user' ? 'user-message' : 'ai-message']">
         <el-avatar :size="40" :icon="message.role === 'user' ? 'User' : 'Service'" />
         <div class="message-content">
-          <div class="message-text">{{ message.content }}</div>
+          <div class="message-text">
+            <template v-if="message.role === 'ai' && message.isTyping">
+              {{ message.displayContent }}<span class="cursor">|</span>
+            </template>
+            <template v-else>
+              {{ message.content }}
+            </template>
+          </div>
           <div class="message-time">{{ message.time }}</div>
         </div>
       </div>
@@ -34,12 +48,15 @@ interface Message {
   role: 'user' | 'ai'
   content: string
   time: string
+  isTyping?: boolean
+  displayContent?: string
 }
 
 const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const loading = ref(false)
 const messagesRef = ref<HTMLElement>()
+const useTypewriter = ref(true)
 
 const formatTime = () => {
   const now = new Date()
@@ -51,6 +68,21 @@ const scrollToBottom = async () => {
   if (messagesRef.value) {
     messagesRef.value.scrollTop = messagesRef.value.scrollHeight
   }
+}
+
+const typeMessage = async (message: Message, content: string) => {
+  message.isTyping = true
+  message.displayContent = ''
+  
+  for (let i = 0; i < content.length; i++) {
+    message.displayContent += content[i]
+    await new Promise(resolve => setTimeout(resolve, 50))
+    await scrollToBottom()
+  }
+  
+  message.isTyping = false
+  message.content = content
+  delete message.displayContent
 }
 
 const sendMessage = async () => {
@@ -69,7 +101,8 @@ const sendMessage = async () => {
   loading.value = true
   try {
     const response = await axios.post('/api/chat', {
-      message: userMessage.content
+      message: userMessage.content,
+      useTypewriter: useTypewriter.value
     })
     
     const aiMessage: Message = {
@@ -79,6 +112,11 @@ const sendMessage = async () => {
     }
     
     messages.value.push(aiMessage)
+    
+    if (useTypewriter.value) {
+      await typeMessage(aiMessage, response.data.data.reply)
+    }
+    
     await scrollToBottom()
   } catch (error) {
     console.error('发送消息失败:', error)
@@ -103,6 +141,12 @@ onMounted(() => {
   flex-direction: column;
   padding: 20px;
   background-color: #f5f7fa;
+}
+
+.chat-header {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .chat-messages {
@@ -160,5 +204,19 @@ onMounted(() => {
 
 .chat-input .el-button {
   align-self: flex-end;
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: #409eff;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 </style> 

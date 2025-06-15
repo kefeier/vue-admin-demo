@@ -1,7 +1,7 @@
 import { MockMethod } from 'vite-plugin-mock'
 
 const responses = {
-  '你好': '你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？',
+  '你好': '你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？你好！很高兴见到你。我是 AI 助手，有什么可以帮你的吗？',
   '你是谁': '我是一个 AI 助手，可以帮助你回答问题、提供建议或者陪你聊天。',
   '天气': '抱歉，我目前无法获取实时天气信息。不过我可以陪你聊聊天，或者回答其他问题。',
   '再见': '再见！如果还有问题随时来找我。',
@@ -14,7 +14,7 @@ export default [
     url: '/api/chat',
     method: 'post',
     response: ({ body }) => {
-      const { message } = body
+      const { message, useTypewriter = true } = body
       let reply = responses['默认']
       
       // 简单的关键词匹配
@@ -28,7 +28,8 @@ export default [
       return {
         code: 200,
         data: {
-          reply
+          reply,
+          useTypewriter
         }
       }
     }
