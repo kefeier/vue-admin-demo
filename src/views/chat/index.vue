@@ -70,21 +70,6 @@ const scrollToBottom = async () => {
   }
 }
 
-const typeMessage = async (message: Message, content: string) => {
-  message.isTyping = true
-  message.displayContent = ''
-  
-  for (let i = 0; i < content.length; i++) {
-    message.displayContent += content[i]
-    await new Promise(resolve => setTimeout(resolve, 50))
-    await scrollToBottom()
-  }
-  
-  message.isTyping = false
-  message.content = content
-  delete message.displayContent
-}
-
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || loading.value) return
 
@@ -100,21 +85,73 @@ const sendMessage = async () => {
   
   loading.value = true
   try {
-    const response = await axios.post('/api/chat', {
-      message: userMessage.content,
-      useTypewriter: useTypewriter.value
-    })
-    
-    const aiMessage: Message = {
-      role: 'ai',
-      content: response.data.data.reply,
-      time: formatTime()
-    }
-    
-    messages.value.push(aiMessage)
-    
     if (useTypewriter.value) {
-      await typeMessage(aiMessage, response.data.data.reply)
+      // 使用 SSE 流式响应
+      const aiMessage: Message = {
+        role: 'ai',
+        content: '',
+        time: formatTime(),
+        isTyping: true,
+        displayContent: ''
+      }
+      messages.value.push(aiMessage)
+
+      const response = await fetch('http://localhost:3000/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage.content })
+      })
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6))
+              
+              if (data.error) {
+                throw new Error(data.error)
+              }
+              
+              if (data.done) {
+                aiMessage.isTyping = false
+                aiMessage.content = aiMessage.displayContent || ''
+                delete aiMessage.displayContent
+                break
+              }
+              
+              if (data.char) {
+                aiMessage.displayContent = (aiMessage.displayContent || '') + data.char
+                await scrollToBottom()
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // 使用普通响应
+      const response = await axios.post('/api/chat', {
+        message: userMessage.content,
+        useTypewriter: false
+      })
+      
+      const aiMessage: Message = {
+        role: 'ai',
+        content: response.data.data.reply,
+        time: formatTime()
+      }
+      
+      messages.value.push(aiMessage)
     }
     
     await scrollToBottom()
