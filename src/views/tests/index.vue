@@ -59,17 +59,17 @@ import { ArrowDown } from '@element-plus/icons-vue'
 const treeData = ref([
   {
     id: 1,
-    label: '一级 1',
+    label: '理科',
     children: [
-      { id: 2, label: '二级 1-1' },
-      { id: 3, label: '二级 1-2' }
+      { id: 2, label: '数学' },
+      { id: 3, label: '物理' }
     ]
   },
   {
     id: 4,
-    label: '一级 2',
+    label: '文科',
     children: [
-      { id: 5, label: '二级 2-1' }
+      { id: 5, label: '语文' }
     ]
   }
 ])
