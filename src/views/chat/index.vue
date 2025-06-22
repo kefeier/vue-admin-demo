@@ -86,6 +86,7 @@ const sendMessage = async () => {
   loading.value = true
   try {
     if (useTypewriter.value) {
+        console.log('useTypewriter.value', useTypewriter.value)
       // 使用 SSE 流式响应
       const aiMessage: Message = {
         role: 'ai',

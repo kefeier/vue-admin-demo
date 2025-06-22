@@ -26,6 +26,12 @@ const router = createRouter({
           name: 'Chat',
           component: () => import('@/views/chat/index.vue'),
           meta: { title: 'AI 助手', icon: 'chat-dot-round' }
+        },
+        {
+          path: 'tests',
+          name: 'Test',
+          component: () => import('@/views/tests/index.vue'),
+          meta: { title: 'AI 助手', icon: 'chat-dot-round' }
         }
       ]
     }
